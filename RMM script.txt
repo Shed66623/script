@@ -1,0 +1,327 @@
+if game.PlaceId == 16667550979 then
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Event = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("LoadCharacter")
+
+for i = 1, 1 do
+    pcall(function() Event:FireServer() end)
+    task.wait(0.5)
+end
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local player = Players.LocalPlayer
+
+getgenv().FullBright = true
+getgenv().TP = false
+getgenv().Noclip = false
+
+local character, hrp
+
+local function attachCharacter(char)
+    character = char
+    local humanoid = char:WaitForChild("Humanoid")
+    hrp = char:WaitForChild("HumanoidRootPart")
+
+    pcall(function()
+        local temp = char:FindFirstChild("Temperature")
+        if temp then temp:Destroy() end
+    end)
+
+    humanoid.Died:Connect(function()
+        hrp = nil
+    end)
+end
+
+if player.Character then
+    attachCharacter(player.Character)
+end
+player.CharacterAdded:Connect(attachCharacter)
+
+task.spawn(function()
+    while getgenv().FullBright do
+        task.wait()
+        Lighting.ClockTime = 12
+        Lighting.Brightness = 2
+        Lighting.FogEnd = 1e6
+        Lighting.GlobalShadows = false
+        Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+        Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+    end
+end)
+
+local function tpFreeze(cf, duration, cd)
+    local conn = RunService.Heartbeat:Connect(function()
+        if hrp and hrp.Parent then
+            hrp.CFrame = cf
+        end
+    end)
+
+    local clicking = true
+    task.spawn(function()
+        while clicking do
+            if cd then
+                pcall(function() fireclickdetector(cd) end)
+            end
+            task.wait(0.01)
+        end
+    end)
+
+    task.wait(duration)
+    clicking = false
+    if conn then conn:Disconnect() end
+end
+
+task.spawn(function()
+    task.wait(11)
+    local vr = workspace:FindFirstChild("VoiceRecorder")
+    local vrClick = vr and vr:FindFirstChild("ClickDetector")
+    if vrClick then
+        tpFreeze(CFrame.new(-240, 82, 56), 7, vrClick)
+    end
+
+    local pi = workspace:FindFirstChild("PunchIn")
+    local piClick = pi and pi:FindFirstChild("ClickDetector")
+    if piClick then
+        tpFreeze(CFrame.new(-296, 82, 16), 80, piClick)
+    end
+
+    getgenv().TP = true
+    getgenv().Noclip = true
+end)
+
+RunService.Heartbeat:Connect(function()
+    if getgenv().TP and hrp and hrp.Parent then
+        hrp.CFrame = CFrame.new(-319, 82, 72)
+    elseif hrp and not hrp.Parent then
+        hrp = nil
+    end
+end)
+
+RunService.Stepped:Connect(function()
+    if getgenv().Noclip and player.Character then
+        for _, v in ipairs(player.Character:GetDescendants()) do
+            if v:IsA("BasePart") and v.CanCollide then
+                v.CanCollide = false
+            end
+        end
+    end
+end)
+
+task.spawn(function()
+    local vu = game:GetService("VirtualUser")
+    player.Idled:Connect(function()
+        vu:CaptureController()
+        vu:ClickButton2(Vector2.new())
+        task.wait(50)
+    end)
+end)
+
+local gui = Instance.new("ScreenGui", game.CoreGui)
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 400, 0, 240)
+frame.Position = UDim2.new(0.5, -200, 0.5, -120)
+frame.BackgroundColor3 = Color3.fromRGB(5, 5, 15)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+
+local corner = Instance.new("UICorner", frame)
+corner.CornerRadius = UDim.new(0, 20)
+
+local gradient = Instance.new("UIGradient", frame)
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 0, 50)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(10, 0, 30)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 20))
+}
+gradient.Rotation = 90
+
+local uiStroke = Instance.new("UIStroke", frame)
+uiStroke.Thickness = 4
+uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+uiStroke.Transparency = 0.2
+uiStroke.Color = Color3.fromRGB(255, 255, 255)
+
+local ledGradient = Instance.new("UIGradient", uiStroke)
+ledGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+    ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 128, 0)),
+    ColorSequenceKeypoint.new(0.4, Color3.fromRGB(0, 255, 0)),
+    ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0, 255, 255)),
+    ColorSequenceKeypoint.new(0.8, Color3.fromRGB(0, 0, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 255))
+}
+ledGradient.Rotation = 0
+
+task.spawn(function()
+    while frame and frame.Parent do
+        ledGradient.Rotation = (ledGradient.Rotation + 4) % 360
+        task.wait(0.01)
+    end
+end)
+
+local glowStroke = Instance.new("UIStroke", frame)
+glowStroke.Thickness = 15
+glowStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+glowStroke.Transparency = 0.2
+glowStroke.LineJoinMode = Enum.LineJoinMode.Round
+glowStroke.Color = Color3.fromRGB(255, 255, 255)
+
+local glowGradient = Instance.new("UIGradient", glowStroke)
+glowGradient.Color = ledGradient.Color
+glowGradient.Rotation = 0
+
+task.spawn(function()
+    while frame and frame.Parent do
+        glowGradient.Rotation = (glowGradient.Rotation + 4) % 360
+        task.wait(0.01)
+    end
+end)
+
+task.spawn(function()
+    while frame and frame.Parent do
+        for i = 0.4, 0.7, 0.02 do
+            glowStroke.Transparency = i
+            task.wait(0.03)
+        end
+        for i = 0.7, 0.4, -0.02 do
+            glowStroke.Transparency = i
+            task.wait(0.03)
+        end
+    end
+end)
+
+for i = 1, 15 do
+    local star = Instance.new("Frame", frame)
+    star.Size = UDim2.new(0, math.random(2,4), 0, math.random(2,4))
+    star.Position = UDim2.new(math.random(), 0, math.random(), 0)
+    star.BackgroundColor3 = Color3.fromRGB(200 + math.random(55), 200 + math.random(55), 255)
+    star.BorderSizePixel = 0
+    star.ZIndex = 0
+    game:GetService("TweenService"):Create(
+        star,
+        TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true),
+        {BackgroundTransparency = 0.6}
+    ):Play()
+end
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, -40, 0, 50)
+title.Position = UDim2.new(0, 20, 0, 8)
+title.BackgroundTransparency = 1
+title.Text = "🌌 Shed Hub 🌌"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 28
+title.TextColor3 = Color3.fromRGB(160, 210, 255)
+title.TextStrokeTransparency = 0.3
+title.TextXAlignment = Enum.TextXAlignment.Left
+
+local titleStroke = Instance.new("UIStroke", title)
+titleStroke.Thickness = 1.5
+titleStroke.Color = Color3.fromRGB(90, 140, 255)
+
+local titleGradient = Instance.new("UIGradient", title)
+titleGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(120,180,255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(200,230,255))
+}
+titleGradient.Rotation = 0
+
+local closeBtn = Instance.new("TextButton", frame)
+closeBtn.Size = UDim2.new(0, 36, 0, 36)
+closeBtn.Position = UDim2.new(1, -44, 0, 10)
+closeBtn.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+closeBtn.Text = "X"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 22
+closeBtn.TextColor3 = Color3.fromRGB(255, 220, 220)
+
+local btnCorner = Instance.new("UICorner", closeBtn)
+btnCorner.CornerRadius = UDim.new(1, 0)
+
+local btnStroke = Instance.new("UIStroke", closeBtn)
+btnStroke.Thickness = 1.8
+btnStroke.Color = Color3.fromRGB(255, 80, 80)
+
+local btnGradient = Instance.new("UIGradient", closeBtn)
+btnGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(180,0,0)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(100,0,0))
+}
+btnGradient.Rotation = 90
+
+closeBtn.MouseEnter:Connect(function()
+    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+end)
+
+closeBtn.MouseLeave:Connect(function()
+    closeBtn.TextColor3 = Color3.fromRGB(255, 220, 220)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+local status = Instance.new("TextLabel", frame)
+status.Size = UDim2.new(1, -35, 0, 45)
+status.Position = UDim2.new(0, 18, 0, 70)
+status.BackgroundTransparency = 1
+status.Text = "⚙️ 自动化已运行..."
+status.Font = Enum.Font.GothamMedium
+status.TextSize = 19
+status.TextColor3 = Color3.fromRGB(230, 230, 255)
+status.TextWrapped = true
+
+local statusStroke = Instance.new("UIStroke", status)
+statusStroke.Thickness = 1
+statusStroke.Color = Color3.fromRGB(160, 160, 255)
+
+local status2 = Instance.new("TextLabel", frame)
+status2.Size = UDim2.new(1, -35, 0, 45)
+status2.Position = UDim2.new(0, 18, 0, 120)
+status2.BackgroundTransparency = 1
+status2.Text = "🟢 传送 + 穿墙: 准备就绪！"
+status2.Font = Enum.Font.GothamMedium
+status2.TextSize = 18
+status2.TextColor3 = Color3.fromRGB(0, 255, 180)
+status2.TextWrapped = true
+
+local status2Stroke = Instance.new("UIStroke", status2)
+status2Stroke.Thickness = 1
+status2Stroke.Color = Color3.fromRGB(0, 200, 150)
+
+local credits = Instance.new("TextLabel", frame)
+credits.Size = UDim2.new(1, -25, 0, 35)
+credits.Position = UDim2.new(0, 12, 1, -40)
+credits.BackgroundTransparency = 1
+credits.Text = "🚀 Credits: Shed Hub 🚀"
+credits.Font = Enum.Font.GothamBold
+credits.TextSize = 17
+credits.TextColor3 = Color3.fromRGB(255, 230, 170)
+credits.TextStrokeTransparency = 0.3
+
+local creditsStroke = Instance.new("UIStroke", credits)
+creditsStroke.Thickness = 1
+creditsStroke.Color = Color3.fromRGB(255, 200, 120)
+
+local creditsGradient = Instance.new("UIGradient", credits)
+creditsGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255,200,120)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255,250,200))
+}
+creditsGradient.Rotation = 0
+
+local player = game.Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+camera.CameraType = Enum.CameraType.Scriptable
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    camera.CFrame = CFrame.new(hrp.Position + Vector3.new(0, 2, 0), hrp.Position)
+end)
+end
