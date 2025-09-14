@@ -1,0 +1,95 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+local localPlayer = Players.LocalPlayer
+local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+local orbitCenter = Vector3.new(-79.20, 4.27, 268.26)
+
+-- GUI setup
+local screenGui = Instance.new("ScreenGui", game.CoreGui)
+screenGui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame", screenGui)
+frame.Size = UDim2.new(0, 200, 0, 150)
+frame.Position = UDim2.new(0.5, -100, 0.5, -75)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Text = "自动胜利"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
+
+local autoWinBtn = Instance.new("TextButton", frame)
+autoWinBtn.Position = UDim2.new(0.1, 0, 0.35, 0)
+autoWinBtn.Size = UDim2.new(0.8, 0, 0, 30)
+autoWinBtn.Text = "自动胜利"
+autoWinBtn.TextColor3 = Color3.new(1, 1, 1)
+autoWinBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+autoWinBtn.Font = Enum.Font.Gotham
+autoWinBtn.TextScaled = true
+
+local ytBtn = Instance.new("TextButton", frame)
+ytBtn.Position = UDim2.new(0.1, 0, 0.65, 0)
+ytBtn.Size = UDim2.new(0.8, 0, 0, 30)
+ytBtn.Text = "油管玩家"
+ytBtn.TextColor3 = Color3.new(1, 1, 1)
+ytBtn.BackgroundColor3 = Color3.fromRGB(70, 0, 0)
+ytBtn.Font = Enum.Font.Gotham
+ytBtn.TextScaled = true
+
+-- Notifications
+pcall(function()
+    StarterGui:SetCore("SendNotification", {
+        Title = "Made by Hoshino Pro",
+        Text = "GUI已加载完成",
+        Duration = 5
+    })
+end)
+
+-- Orbiting Logic
+local orbiting = false
+local orbitRadius = 20
+local orbitSpeed = 1.5
+local angle = 0
+
+autoWinBtn.MouseButton1Click:Connect(function()
+    orbiting = not orbiting
+    autoWinBtn.Text = orbiting and "自动胜利已打开" or "自动胜利已关闭"
+end)
+
+ytBtn.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/Dan41/Roblox-Scripts/refs/heads/main/Youtube%20Play/1%20YoutubePlay.lua', true))()
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = "油管玩家",
+            Text = "Script by Hoshino Pro",
+            Duration = 4
+        })
+    end)
+end)
+
+RunService.RenderStepped:Connect(function(dt)
+    if orbiting and character and character:FindFirstChild("HumanoidRootPart") then
+        local closestNPC, minDist = nil, 20
+        for _, npc in ipairs(workspace:GetDescendants()) do
+            if npc:IsA("Model") and npc ~= character and npc:FindFirstChild("Humanoid") and npc:FindFirstChild("HumanoidRootPart") then
+                local dist = (npc.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude
+                if dist <= minDist then
+                    minDist = dist
+                    closestNPC = npc
+                end
+            end
+        end
+        if closestNPC then
+            angle += orbitSpeed * dt
+            local newPos = orbitCenter + Vector3.new(math.cos(angle) * orbitRadius, 0, math.sin(angle) * orbitRadius)
+            character:MoveTo(newPos)
+        end
+    end
+end)
