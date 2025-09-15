@@ -127,7 +127,6 @@ task.wait(2)
 setupTranslationEngine()
 
 local success, err = pcall(function()
---这下面填加载外部脚本
 loadstring(game:HttpGet("https://raw.githubusercontent.com/RyumaHub/13/main/Residence%20Massacre%20Endless.lua"))()
 
 
