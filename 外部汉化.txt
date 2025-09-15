@@ -1,5 +1,5 @@
 local Translations = {
-   --["Settings"] = "设置",
+    ["Settings"] = "设置",
     ["Select Safe Zone"] = "传送安全地方",
     ["Safe Zone 1-Night 1"] = "安全地方1"
     ["Generator Fuel Status"] = "汽油总量显示",
